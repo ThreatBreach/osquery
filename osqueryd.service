@@ -1,0 +1,21 @@
+[Unit]
+Description=The osquery Daemon
+After=network.service syslog.service
+
+[Service]
+TimeoutStartSec=0
+EnvironmentFile=/etc/default/osqueryd
+ExecStartPre=/bin/sh -c "if [ ! -f $FLAG_FILE ]; then touch $FLAG_FILE; fi"
+ExecStartPre=/bin/sh -c "if [ -f $LOCAL_PIDFILE ]; then mv $LOCAL_PIDFILE $PIDFILE; fi"
+ExecStart=/opt/osquery/bin/osqueryd \
+  --flagfile $FLAG_FILE \
+  --config_path $CONFIG_FILE --audit_allow_config=true --audit_allow_sockets --audit_persist=true --disable_audit=false --events_expiry=1 --events_max=500000 --logger_min_status=1 --logger_plugin=filesystem --watchdog_memory_limit=350 --watchdog_utilization_limit=130 --disable_events=false --enable_bpf_events=true
+Restart=on-failure
+KillMode=control-group
+KillSignal=SIGTERM
+TimeoutStopSec=15
+CPUQuota=20%
+User=root
+
+[Install]
+WantedBy=multi-user.target
